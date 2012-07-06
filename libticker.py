@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import urllib
+import urllib2
 import json
 
 exchanges = {'MtGox' :
@@ -23,7 +23,7 @@ exchanges = {'MtGox' :
 def getRate(exchange):
     if not exchange in exchanges:
         raise BaseException('Exchange does not exist')
-    u = urllib.urlopen(exchanges[exchange]['url'])
+    u = urllib2.urlopen(exchanges[exchange]['url'])
     data = u.read()
     feed = json.loads(data)
     rate = feed
