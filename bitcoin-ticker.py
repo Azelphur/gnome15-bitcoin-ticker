@@ -19,7 +19,7 @@
 #        +-----------------------------------------------------------------------------+
  
 import gnome15.g15locale as g15locale
-_ = g15locale.get_translation("clock", modfile = __file__).ugettext
+_ = g15locale.get_translation("bitcoin-ticker", modfile = __file__).ugettext
 
 import gnome15.g15screen as g15screen 
 import gnome15.g15theme as g15theme 
@@ -27,80 +27,127 @@ import gnome15.g15util as g15util
 import gnome15.g15driver as g15driver
 import gnome15.g15globals as g15globals
 import gnome15.g15text as g15text
+import gnome15.g15plugin as g15plugin
 import datetime
 import gtk
 import pango
 import os
 import locale
-import libticker
+import ticker
 
 # Plugin details - All of these must be provided
 id="bitcoin-ticker"
 name=_("Bitcoin Ticker")
-description=_("Displays current bitcoin exchange rate")
+description=_("Displays information about the current bitcoin exchange rate")
 author="Alfie \"Azelphur\" Day <support@azelphur.com>"
-copyright=_("Copyright (C)2010 Alfie Day")
-site="http://www.gnome15.org/"
+copyright=_("Copyright (C)2013 Alfie Day")
+site="http://azelphur.com"
 has_preferences=True
-unsupported_models = [ g15driver.MODEL_G110, g15driver.MODEL_G11 ]
+unsupported_models = [ g15driver.MODEL_G110, g15driver.MODEL_G11, g15driver.MODEL_G930, g15driver.MODEL_G35 ]
 
-# 
-# This simple plugin displays a digital clock. It also demonstrates
-# how to add a preferences dialog for your plugin
-# 
 
 ''' 
 This function must create your plugin instance. You are provided with
 a GConf client and a Key prefix to use if your plugin has preferences
 '''
 def create(gconf_key, gconf_client, screen):
-    return BitcoinTicker(gconf_key, gconf_client, screen)
+    return G15BitcoinTicker(gconf_key, gconf_client, screen)
 
+''' 
+This function must be provided if you set has_preferences to True. You
+should display a dialog for editing the plugins preferences
+'''
 def show_preferences(parent, driver, gconf_client, gconf_key):
-    widget_tree = gtk.Builder()
-    widget_tree.add_from_file(os.path.join(os.path.dirname(__file__), "bitcoin-ticker.glade"))
+    G15BitcoinTickerPreferences(parent, driver, gconf_key, gconf_client)
+
+class G15BitcoinTickerPreferences():
     
-    dialog = widget_tree.get_object("ClockDialog")
-    dialog.set_transient_for(parent)
-
-    exchange_model = widget_tree.get_object("ExchangeModel")
-    exchange_combo_box = widget_tree.get_object("ExchangeComboBox")
-    exchange_combo_box.connect("changed", exchange_changed, gconf_key + "/exchange", [gconf_client, exchange_model])
-
-    selected_exchange = gconf_client.get_string(gconf_key + "/exchange")
-    exchanges = libticker.getExchanges()
-    if selected_exchange == None:
-        selected_exchange = exchanges[0]
-    for exchange in exchanges:
-        exchange_model.append([exchange])
-        if exchange == selected_exchange:
-            exchange_combo_box.set_active(len(exchange_model) - 1)
-
-
-    exchange_spin_button = widget_tree.get_object("UpdateMinutesSpinButton")
-    adj = gtk.Adjustment(1, 1, 9999, 1, 1, 1)
-    exchange_spin_button.configure(adj, 1, 0)
-    exchange_spin_button.connect("value-changed", time_changed, gconf_key + "/update_minutes", gconf_client)
-    update_minutes = gconf_client.get_int(gconf_key + "/update_minutes")
-    if update_minutes == None:
-        update_minutes = 15
-    exchange_spin_button.set_value(update_minutes)
-
-    exchange_combo_box = widget_tree.get_object("label1")
-    exchange_combo_box = widget_tree.get_object("label2")
+    def __init__(self, parent, driver, gconf_key, gconf_client):
+        widget_tree = gtk.Builder()
+        widget_tree.add_from_file(os.path.join(os.path.dirname(__file__), "bitcoin-ticker.glade"))
         
-    dialog.run()
-    dialog.hide()
+        dialog = widget_tree.get_object("TickerDialog")
+        dialog.set_transient_for(parent)
+        
+        exchange_model = widget_tree.get_object("ExchangeModel")
+        exchange_combo_box = widget_tree.get_object("ExchangeComboBox")
 
-def time_changed(widget, key, gconf_client):
-    gconf_client.set_int(key, int(widget.get_value()))
+        currency_model = widget_tree.get_object("CurrencyModel")
+        currency_combo_box = widget_tree.get_object("CurrencyComboBox")
 
-def exchange_changed(widget, key, args):
-    gconf_client = args[0]
-    model = args[1]
-    gconf_client.set_string(key, model[widget.get_active()][0])
+        update_minutes_spin_button = widget_tree.get_object("UpdateMinutesSpinButton")
 
-class BitcoinTicker():
+        def _exchange_changed(widget, key):
+            exchange = exchange_model[widget.get_active()][0]
+            gconf_client.set_string(key, exchange)
+
+            currency_model.clear()
+
+            currencies = ticker.getCurrencies(exchange)
+
+            selected_currency = gconf_client.get_string(gconf_key + "/currency")
+            if selected_currency == None or selected_currency not in currencies:
+                selected_currency = currencies[0]
+
+            for currency in currencies:
+                currency_model.append([currency])
+                if currency == selected_currency:
+                    currency_combo_box.set_active(len(currency_model) - 1)
+        
+        def _currency_changed(widget, key):
+            slot = widget.get_active()
+            if slot == -1: return
+            currency = currency_model[slot][0]
+            gconf_client.set_string(key, currency)
+
+        def _update_minutes_changed(widget, key):
+            gconf_client.set_int(key, int(widget.get_value()))
+            
+        exchange_combo_box.connect("changed", _exchange_changed, gconf_key + "/exchange")
+        currency_combo_box.connect("changed", _currency_changed, gconf_key + "/currency")
+        update_minutes_spin_button.connect("value-changed", _update_minutes_changed, gconf_key + "/update_minutes")
+        update_minutes = gconf_client.get_int(gconf_key + "/update_minutes")
+        if update_minutes == None:
+            update_minutes = 30
+        update_minutes_spin_button.set_value(update_minutes)
+
+        exchanges = ticker.getExchanges()
+
+        selected_exchange = gconf_client.get_string(gconf_key + "/exchange")
+        if selected_exchange == None or selected_exchange not in exchanges:
+            selected_exchange = exchanges[0]
+
+        for exchange in exchanges:
+            exchange_model.append([exchange])
+            if exchange == selected_exchange:
+                exchange_combo_box.set_active(len(exchange_model) - 1)
+
+        dialog.run()
+        dialog.hide()
+
+
+def _changed(widget, key, gconf_client):
+    '''
+    gconf configuration has changed, redraw our canvas
+    '''
+    gconf_client.set_bool(key, widget.get_active())
+
+class G15BitcoinTicker(g15plugin.G15Plugin):
+    '''
+    You would normally want to extend at least g15plugin.G15Plugin as it
+    provides basic plugin functions. 
+    
+    There are also further specialisations, such as g15plugin.G15PagePlugin
+    for plugins that have display a page, or g15plugin.G15MenuPlugin for
+    menu like plugins, or g15plugin.G15RefreshingPlugin for plugins that
+    refresh their view based on a timer.
+    
+    This example uses the most basic type to demonstrate how plugins are put
+    together, but it could easily use G15RefreshingPlugin and cut out a lot
+    of code.
+    
+    '''
+    
     
     ''' 
     ******************************************************************
@@ -110,28 +157,26 @@ class BitcoinTicker():
     '''
     
     def __init__(self, gconf_key, gconf_client, screen):
-        self.screen = screen
+        g15plugin.G15Plugin.__init__(self, gconf_client, gconf_key, screen)
         self.hidden = False
-        self.gconf_client = gconf_client
-        self.gconf_key = gconf_key
         self.page = None
-        self.exchange = None
+        self._last_update = 0
+        self.exdata = None
     
     def activate(self):
-        
         '''
         The activate function is invoked when gnome15 starts up, or the plugin is re-enabled
-        after it has been disabled
+        after it has been disabled. When extending any of the provided base plugin classes,
+        you nearly always want to call the function in the supoer class as well
         '''
+        g15plugin.G15Plugin.activate(self)
         
+
+        '''
+        Load our configuration
+        '''        
         self.timer = None
         self._load_configuration()
-        
-        '''
-        We will be drawing text manually in the thumbnail, so it is recommended you use the
-        G15Text class which simplifies drawing and measuring text in an efficient manner  
-        '''
-        self.text = g15text.new_text(self.screen)
         
         '''
         Most plugins will delegate their drawing to a 'Theme'. A theme usually consists of an SVG file, one
@@ -150,8 +195,10 @@ class BitcoinTicker():
         '''        
         self.page = g15theme.G15Page("Bitcoin Ticker", self.screen, 
                                      theme_properties_callback = self._get_properties,
-                                     theme = self.theme)
-                                     #thumbnail_painter = self.paint_thumbnail, panel_painter = self.paint_thumbnail,
+                                     thumbnail_painter = self.paint_thumbnail, panel_painter = self.paint_thumbnail,
+                                     theme = self.theme,
+                                     originating_plugin = self)
+
         self.page.title = "Bitcoin Ticker"
         
         '''
@@ -165,24 +212,24 @@ class BitcoinTicker():
         the on_shown function will be invoked when it finally is.         
         '''
         self.screen.redraw(self.page)
+
+        self._refresh()
+        self.bitcoinLogo = g15util.load_surface_from_file(os.path.join(os.path.dirname(__file__), "bitcoinLogo.svg"))
         
         '''
-        As this is a Clock, we want to redraw at fixed intervals. So, schedule another redraw
-        if appropriate
+        Schedule a bitcoin rate update
         '''        
-        self._schedule_redraw()
+        self._schedule_refresh()
         
         '''
-        We want to be notified when the plugin configuration changed, so watch for gconf events
+        We want to be notified when the plugin configuration changed, so watch for gconf events.
+        The watch function is used, as this will automatically track the monitor handles
+        and clean them up when the plugin is deactivated
         '''        
-        self.notify_handle = self.gconf_client.notify_add(self.gconf_key, self._config_changed);
+        self.watch(None, self._config_changed)
     
     def deactivate(self):
-        
-        '''
-        Stop being notified about configuration changes
-        '''        
-        self.gconf_client.notify_remove(self.notify_handle);
+        g15plugin.G15Plugin.deactivate(self)
         
         '''
         Stop updating
@@ -219,45 +266,8 @@ class BitcoinTicker():
     the amount of space you have (i.e. 6 pixels high maximum and limited width)
     ''' 
     def paint_thumbnail(self, canvas, allocated_size, horizontal):
-        if self.page and not self.screen.is_visible(self.page):
-            properties = self._get_properties()
-            # Don't display the date or seconds on mono displays, not enough room as it is
-            if self.screen.driver.get_bpp() == 1:
-                text = properties["time_nosec"]
-                font_size = 8
-                factor = 2
-                font_name = g15globals.fixed_size_font_name
-                x = 1
-                gap = 1
-            else:
-                factor = 1 if horizontal else 2
-                font_name = "Sans"
-                if self.display_date:
-                    text = "%s\n%s" % ( properties["time"],properties["date"] ) 
-                    font_size = allocated_size / 3
-                else:
-                    text = properties["time"]
-                    font_size = allocated_size / 2
-                x = 4
-                gap = 8
-                
-            self.text.set_canvas(canvas)
-            self.text.set_attributes(text, align = pango.ALIGN_CENTER, font_desc = font_name, \
-                                     font_absolute_size = font_size * pango.SCALE / factor)
-            x, y, width, height = self.text.measure()
-            if horizontal: 
-                if self.screen.driver.get_bpp() == 1:
-                    y = 0
-                else:
-                    y = (allocated_size / 2) - height / 2
-            else:      
-                x = (allocated_size / 2) - width / 2
-                y = 0
-            self.text.draw(x, y)
-            if horizontal:
-                return width + gap
-            else:
-                return height + 4
+        if self.page != None and self.screen.driver.get_bpp() == 16:
+            return g15util.paint_thumbnail_image(allocated_size, self.bitcoinLogo, canvas)
     
     ''' 
     ***********************************************************
@@ -270,6 +280,7 @@ class BitcoinTicker():
         '''
         Load the gconf configuration
         '''
+        last = [self.exchange, self.currency]
         self._load_configuration()
         
         '''
@@ -292,43 +303,62 @@ class BitcoinTicker():
         '''
         self.screen.set_priority(self.page, g15screen.PRI_HIGH, revert_after = 3.0)
         
-    def _load_configuration(self):
-        update = False
-        if self.exchange != None:
-            update = True
+        
+        '''
+        Schedule a redraw as well
+        '''
 
+        if last == [self.exchange, self.currency]:
+            self._schedule_refresh()
+        else:
+            self._refresh()
+        
+    def _load_configuration(self):
         self.exchange = self.gconf_client.get_string(self.gconf_key + "/exchange")
         if self.exchange == None:
-            self.exchange = libticker.getExchanges()[0]
+            self.exchange = ticker.getExchanges()[0]
+
+        self.currency = self.gconf_client.get_string(self.gconf_key + "/currency")
+        if self.currency == None:
+            self.currency = ticker.getCurrencies(self.exchange)[0]
 
         self.update_minutes = self.gconf_client.get_int(self.gconf_key + "/update_minutes")
+        if self.update_minutes == None:
+            self.update_minutes = 30
 
-        if update:
-            self._update_rate()
-        
-    def _redraw(self):
+    def _refresh(self):
         '''
         Invoked by the timer once a second to redraw the screen. If your page is currently activem
         then the paint() functions will now get called. When done, we want to schedule the next
         redraw
         '''
+        self.exdata = ticker.getRate(self.exchange, self.currency)
         self.screen.redraw(self.page) 
-        self._schedule_redraw()
+        self._schedule_refresh()
         
-    def _schedule_redraw(self):
+    def _schedule_refresh(self):
+        if not self.active:
+            return
+
+        if self.timer is not None:
+            self.timer.cancel()
+
         '''
         Determine when to schedule the next redraw for. 
         '''
-        self._update_rate()
+        now = datetime.datetime.now()
+        next_tick = now + datetime.timedelta(0, self.update_minutes * 60)
+        next_tick = datetime.datetime(next_tick.year,next_tick.month,next_tick.day,next_tick.hour, next_tick.minute, 0)
+        delay = g15util.total_seconds( next_tick - now )
         
         '''
         Try not to create threads or timers if possible. Use g15util.schedule() instead
         '''
-        self.timer = g15util.schedule("BitcoinTickerUpdate", self.update_minutes*60, self._redraw)
+        self.timer = g15util.schedule("BitcoinTickerRedraw", delay, self._refresh)
         
-    def _reload_theme(self):
-        self.theme = g15theme.G15Theme(os.path.join(os.path.dirname(__file__), "default"), self.exchange.lower())
-                
+    def _reload_theme(self):        
+        self.theme = g15theme.G15Theme(os.path.join(os.path.dirname(__file__), "default"))
+        
     '''
     Get the properties dictionary
     '''
@@ -339,9 +369,18 @@ class BitcoinTicker():
         Get the details to display and place them as properties which are passed to
         the theme
         '''
-        properties["rate"] = self.exchangerate
-            
-        return properties
+        properties["exchange"] = self.exchange
+        properties["currency"] = self.currency
+        icon = os.path.join(os.path.dirname(__file__), "icons", self.exchange+".svg")
+        if os.path.exists(icon):
+            properties["icon"] = icon
+        else:
+            properties["icon"] = os.path.join(os.path.dirname(__file__), "bitcoinLogo.svg")
+        if self.exdata == None:
+            return properties
 
-    def _update_rate(self):
-        self.exchangerate = libticker.getRate(self.exchange)
+        for k, v in self.exdata.items():
+            properties[k] = v
+
+        properties["volume"] = round(properties["volume"], 2)
+        return properties

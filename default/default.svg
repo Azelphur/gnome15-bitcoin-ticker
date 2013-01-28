@@ -13,7 +13,7 @@
    height="43"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.0 r9654"
+   inkscape:version="0.48.3.1 r9886"
    sodipodi:docname="default.svg">
   <defs
      id="defs4" />
@@ -25,17 +25,17 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="5.6"
-     inkscape:cx="75.053114"
+     inkscape:cx="186.3189"
      inkscape:cy="25.662595"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
      borderlayer="false"
-     inkscape:window-width="1398"
-     inkscape:window-height="755"
-     inkscape:window-x="2241"
-     inkscape:window-y="266"
-     inkscape:window-maximized="0">
+     inkscape:window-width="2548"
+     inkscape:window-height="1412"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1">
     <inkscape:grid
        type="xygrid"
        id="grid3986"
@@ -63,15 +63,102 @@
      transform="translate(0,-1009.3622)">
     <text
        xml:space="preserve"
-       style="font-size:47.99999981px;font-style:normal;font-weight:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans;font-stretch:normal;font-variant:normal;writing-mode:lr"
-       x="85.998466"
-       y="969.65656"
-       id="text4014"
-       sodipodi:linespacing="125%"
-       transform="scale(0.93024918,1.0749808)"><tspan
+       style="font-size:7.70938444px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="0.81492358"
+       y="1016.0536"
+       id="text2985"
+       sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
-         id="tspan4016"
-         x="85.998466"
-         y="969.65656">${time}</tspan></text>
+         id="tspan2987"
+         x="0.81492358"
+         y="1016.0536">Bitcoin Ticker: ${exchange} ${currency}</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:7.70938444px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="0.89285713"
+       y="1023.9693"
+       id="text2985-8"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan2987-7"
+         x="0.89285713"
+         y="1023.9693">Ask: ${ask}</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:7.70938444px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="79.285713"
+       y="1023.255"
+       id="text2985-8-7"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan2987-7-7"
+         x="79.285713"
+         y="1023.255">Bid: ${bid}</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:7.70938444px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="0.17857143"
+       y="1031.6479"
+       id="text2985-8-1"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan2987-7-3"
+         x="0.17857143"
+         y="1031.6479">Spread: ${spread}</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:7.70938444px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="78.928574"
+       y="1031.6479"
+       id="text2985-8-1-1"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan2987-7-3-6"
+         x="78.928574"
+         y="1031.6479">Avg: ${avg}</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:7.70938444px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="-1.6348703e-06"
+       y="1039.3265"
+       id="text2985-8-1-0"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan2987-7-3-3"
+         x="-1.6348703e-06"
+         y="1039.3265">High: ${high}</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:7.70938444px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="78.75"
+       y="1039.3265"
+       id="text2985-8-1-1-1"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan2987-7-3-6-1"
+         x="78.75"
+         y="1039.3265">Low: ${low}</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:7.70938444px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="0"
+       y="1047.3622"
+       id="text2985-8-1-2"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan2987-7-3-1"
+         x="0"
+         y="1047.3622">Last: ${last}</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:7.70938444px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="78.75"
+       y="1047.3622"
+       id="text2985-8-1-1-6"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan2987-7-3-6-8"
+         x="78.75"
+         y="1047.3622">Vol: ${volume}</tspan></text>
   </g>
 </svg>
